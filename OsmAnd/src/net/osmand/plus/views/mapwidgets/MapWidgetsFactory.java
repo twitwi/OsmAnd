@@ -2,6 +2,7 @@ package net.osmand.plus.views.mapwidgets;
 
 import static net.osmand.plus.views.mapwidgets.WidgetType.ALTITUDE_MY_LOCATION;
 import static net.osmand.plus.views.mapwidgets.WidgetType.ALTITUDE_MAP_CENTER;
+import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_TO_DESTINATION;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +19,7 @@ import net.osmand.plus.views.mapwidgets.widgets.CoordinatesMapCenterWidget;
 import net.osmand.plus.views.mapwidgets.widgets.CoordinatesCurrentLocationWidget;
 import net.osmand.plus.views.mapwidgets.widgets.CurrentSpeedWidget;
 import net.osmand.plus.views.mapwidgets.widgets.CurrentTimeWidget;
+import net.osmand.plus.views.mapwidgets.widgets.DiffElevationToPointWidget;
 import net.osmand.plus.views.mapwidgets.widgets.DistanceToPointWidget.DistanceToDestinationWidget;
 import net.osmand.plus.views.mapwidgets.widgets.DistanceToPointWidget.DistanceToIntermediateDestinationWidget;
 import net.osmand.plus.views.mapwidgets.widgets.ElevationProfileWidget;
@@ -80,9 +82,14 @@ public class MapWidgetsFactory {
 			case TIME_TO_INTERMEDIATE:
 				TimeToNavigationPointWidgetState state = new TimeToNavigationPointWidgetState(app, customId, true);
 				return new TimeToNavigationPointWidget(mapActivity, state, customId, panel);
-			case TIME_TO_DESTINATION:
+			case TIME_TO_DESTINATION: {
 				TimeToNavigationPointWidgetState widgetState = new TimeToNavigationPointWidgetState(app, customId, false);
 				return new TimeToNavigationPointWidget(mapActivity, widgetState, customId, panel);
+			}
+			case DIFF_ELEVATION_TO_DESTINATION: {
+				TimeToNavigationPointWidgetState widgetState = new TimeToNavigationPointWidgetState(app, customId, false);
+				return new DiffElevationToPointWidget(mapActivity, widgetState, customId, panel);
+			}
 			case SIDE_MARKER_1:
 				MapMarkerSideWidgetState firstMarkerState = new MapMarkerSideWidgetState(app, customId, true);
 				return new MapMarkerSideWidget(mapActivity, firstMarkerState, customId, panel);

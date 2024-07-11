@@ -67,6 +67,7 @@ public enum WidgetType {
 	INTERMEDIATE_DESTINATION("intermediate_distance", R.string.map_widget_distance_to_intermediate, R.string.distance_to_intermediate_widget_desc, R.drawable.widget_intermediate_day, R.drawable.widget_intermediate_night, 0, WidgetGroup.NAVIGATION_POINTS, RIGHT),
 	TIME_TO_INTERMEDIATE("time_to_intermediate", R.string.map_widget_time_to_intermediate, R.string.time_to_intermediate_widget_desc, R.drawable.widget_intermediate_time_day, R.drawable.widget_intermediate_time_night, 0, WidgetGroup.NAVIGATION_POINTS, RIGHT),
 	TIME_TO_DESTINATION("time_to_destination", R.string.map_widget_time_to_destination, R.string.time_to_destination_widget_desc, R.drawable.widget_time_to_distance_day, R.drawable.widget_time_to_distance_night, 0, WidgetGroup.NAVIGATION_POINTS, RIGHT),
+	DIFF_ELEVATION_TO_DESTINATION("diff_elevation_to_destination", R.string.map_widget_time_to_destination, R.string.time_to_destination_widget_desc, R.drawable.widget_time_to_distance_day, R.drawable.widget_time_to_distance_night, 0, WidgetGroup.NAVIGATION_POINTS, RIGHT),
 
 	SIDE_MARKER_1("map_marker_1st", R.string.marker_1st, R.string.first_marker_widget_desc, R.drawable.widget_marker_day, R.drawable.widget_marker_night, 0, WidgetGroup.MAP_MARKERS, RIGHT),
 	SIDE_MARKER_2("map_marker_2nd", R.string.marker_2nd, R.string.second_marker_widget_desc, R.drawable.widget_marker_day, R.drawable.widget_marker_night, 0, WidgetGroup.MAP_MARKERS, RIGHT),
