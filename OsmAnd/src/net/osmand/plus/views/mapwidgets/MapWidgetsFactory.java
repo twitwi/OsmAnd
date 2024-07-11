@@ -37,6 +37,7 @@ import net.osmand.plus.views.mapwidgets.widgets.SecondNextTurnWidget;
 import net.osmand.plus.views.mapwidgets.widgets.StreetNameWidget;
 import net.osmand.plus.views.mapwidgets.widgets.SunriseSunsetWidget;
 import net.osmand.plus.views.mapwidgets.widgets.TimeToNavigationPointWidget;
+import net.osmand.plus.views.mapwidgets.widgetstates.DiffElevationToPointWidgetState;
 import net.osmand.plus.views.mapwidgets.widgetstates.GlideTargetWidgetState;
 import net.osmand.plus.views.mapwidgets.widgetstates.MapMarkerSideWidgetState;
 import net.osmand.plus.views.mapwidgets.widgetstates.SunriseSunsetWidgetState;
@@ -79,16 +80,17 @@ public class MapWidgetsFactory {
 				return new DistanceToDestinationWidget(mapActivity, customId, panel);
 			case INTERMEDIATE_DESTINATION:
 				return new DistanceToIntermediateDestinationWidget(mapActivity, customId, panel);
-			case TIME_TO_INTERMEDIATE:
+			case TIME_TO_INTERMEDIATE: {
 				TimeToNavigationPointWidgetState state = new TimeToNavigationPointWidgetState(app, customId, true);
 				return new TimeToNavigationPointWidget(mapActivity, state, customId, panel);
+			}
 			case TIME_TO_DESTINATION: {
-				TimeToNavigationPointWidgetState widgetState = new TimeToNavigationPointWidgetState(app, customId, false);
-				return new TimeToNavigationPointWidget(mapActivity, widgetState, customId, panel);
+				TimeToNavigationPointWidgetState state = new TimeToNavigationPointWidgetState(app, customId, false);
+				return new TimeToNavigationPointWidget(mapActivity, state, customId, panel);
 			}
 			case DIFF_ELEVATION_TO_DESTINATION: {
-				TimeToNavigationPointWidgetState widgetState = new TimeToNavigationPointWidgetState(app, customId, false);
-				return new DiffElevationToPointWidget(mapActivity, widgetState, customId, panel);
+				DiffElevationToPointWidgetState state = new DiffElevationToPointWidgetState(app, customId, false);
+				return new DiffElevationToPointWidget(mapActivity, state, customId, panel);
 			}
 			case SIDE_MARKER_1:
 				MapMarkerSideWidgetState firstMarkerState = new MapMarkerSideWidgetState(app, customId, true);

@@ -17,7 +17,7 @@ import net.osmand.plus.utils.OsmAndFormatter;
 import net.osmand.plus.views.layers.base.OsmandMapLayer.DrawSettings;
 import net.osmand.plus.views.mapwidgets.WidgetType;
 import net.osmand.plus.views.mapwidgets.WidgetsPanel;
-import net.osmand.plus.views.mapwidgets.widgetstates.TimeToNavigationPointWidgetState;
+import net.osmand.plus.views.mapwidgets.widgetstates.DiffElevationToPointWidgetState;
 import net.osmand.plus.views.mapwidgets.widgetstates.TimeToNavigationPointWidgetState.TimeToNavigationPointState;
 import net.osmand.plus.views.mapwidgets.widgetstates.WidgetState;
 import net.osmand.util.Algorithms;
@@ -29,13 +29,13 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	private static final long UPDATE_INTERVAL_SECONDS = 30;
 
 	private final RoutingHelper routingHelper;
-	private final TimeToNavigationPointWidgetState widgetState;
+	private final DiffElevationToPointWidgetState widgetState;
 	private final OsmandPreference<Boolean> arrivalTimeOtherwiseTimeToGoPref;
 
 	private boolean cachedArrivalTimeOtherwiseTimeToGo;
 	private int cachedLeftSeconds;
 
-	public DiffElevationToPointWidget(@NonNull MapActivity mapActivity, @NonNull TimeToNavigationPointWidgetState widgetState, @Nullable String customId, @Nullable WidgetsPanel widgetsPanel) {
+	public DiffElevationToPointWidget(@NonNull MapActivity mapActivity, @NonNull DiffElevationToPointWidgetState widgetState, @Nullable String customId, @Nullable WidgetsPanel widgetsPanel) {
 		super(mapActivity, getWidgetType(widgetState.isIntermediate()), customId, widgetsPanel);
 		this.widgetState = widgetState;
 		this.routingHelper = app.getRoutingHelper();
@@ -115,7 +115,7 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	}
 
 	private void updateIcons() {
-		TimeToNavigationPointState state = getCurrentState();
+		DiffElevationToPointWidgetState.DiffElevationType state = getCurrentState();
 		setIcons(state.dayIconId, state.nightIconId);
 	}
 
@@ -156,9 +156,10 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	@Nullable
 	protected String getWidgetName() {
 		if (widgetState != null) {
-			TimeToNavigationPointState state = getCurrentState();
-			if (state == TimeToNavigationPointState.INTERMEDIATE_ARRIVAL_TIME || state == TimeToNavigationPointState.INTERMEDIATE_TIME_TO_GO) {
-				return getString(R.string.rendering_attr_smoothness_intermediate_name);
+			DiffElevationToPointWidgetState.DiffElevationType state = getCurrentState();
+			//if (state == TimeToNavigationPointState.INTERMEDIATE_ARRIVAL_TIME || state == TimeToNavigationPointState.INTERMEDIATE_TIME_TO_GO) {
+			if (state == DiffElevationToPointWidgetState.DiffElevationType.POSITIVE_DIFF) {
+					return getString(R.string.rendering_attr_smoothness_intermediate_name);
 			} else {
 				return getString(R.string.route_descr_destination);
 			}
@@ -167,7 +168,12 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	}
 
 	@NonNull
-	private TimeToNavigationPointState getCurrentState() {
-		return TimeToNavigationPointState.getState(widgetState.isIntermediate(), arrivalTimeOtherwiseTimeToGoPref.get());
+	private DiffElevationToPointWidgetState.DiffElevationType getCurrentState() {
+		return widgetState.getDiffElevationType();
 	}
+	/*
+	@NonNull
+	private DiffElevationToPointWidgetState getCurrentState() {
+		return DiffElevationToPointWidgetState.getState(widgetState.isIntermediate(), arrivalTimeOtherwiseTimeToGoPref.get());
+	} */
 }
