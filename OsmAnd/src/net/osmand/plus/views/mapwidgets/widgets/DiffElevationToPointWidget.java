@@ -30,17 +30,21 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 
 	private final RoutingHelper routingHelper;
 	private final DiffElevationToPointWidgetState widgetState;
-	private final OsmandPreference<Boolean> arrivalTimeOtherwiseTimeToGoPref;
+	//private final OsmandPreference<Boolean> arrivalTimeOtherwiseTimeToGoPref;
+	private final OsmandPreference<DiffElevationToPointWidgetState.DiffElevationType> typePreference;
 
-	private boolean cachedArrivalTimeOtherwiseTimeToGo;
+	//private boolean cachedArrivalTimeOtherwiseTimeToGo;
+	private DiffElevationToPointWidgetState.DiffElevationType cachedTypePreference;
 	private int cachedLeftSeconds;
 
 	public DiffElevationToPointWidget(@NonNull MapActivity mapActivity, @NonNull DiffElevationToPointWidgetState widgetState, @Nullable String customId, @Nullable WidgetsPanel widgetsPanel) {
 		super(mapActivity, getWidgetType(widgetState.isIntermediate()), customId, widgetsPanel);
 		this.widgetState = widgetState;
 		this.routingHelper = app.getRoutingHelper();
-		this.arrivalTimeOtherwiseTimeToGoPref = widgetState.getPreference();
-		this.cachedArrivalTimeOtherwiseTimeToGo = arrivalTimeOtherwiseTimeToGoPref.get();
+		//this.arrivalTimeOtherwiseTimeToGoPref = widgetState.getPreference();
+		//this.cachedArrivalTimeOtherwiseTimeToGo = arrivalTimeOtherwiseTimeToGoPref.get();
+		this.typePreference = widgetState.getPreference();
+		this.cachedTypePreference = typePreference.get();
 
 		setText(null, null);
 		updateIcons();
@@ -88,14 +92,23 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	protected void updateSimpleWidgetInfo(@Nullable DrawSettings drawSettings) {
 		int leftSeconds = 0;
 
+		boolean modeUpdated = typePreference.get() != cachedTypePreference;
+		if (modeUpdated) {
+			cachedTypePreference = typePreference.get();
+			updateIcons();
+			updateContentTitle();
+		}
+		/*
 		boolean timeModeUpdated = arrivalTimeOtherwiseTimeToGoPref.get() != cachedArrivalTimeOtherwiseTimeToGo;
 		if (timeModeUpdated) {
 			cachedArrivalTimeOtherwiseTimeToGo = arrivalTimeOtherwiseTimeToGoPref.get();
 			updateIcons();
 			updateContentTitle();
 		}
+		*/
 
 		if (routingHelper.isRouteCalculated()) {
+			/*
 			leftSeconds = widgetState.isIntermediate() ? routingHelper.getLeftTimeNextIntermediate() : routingHelper.getLeftTime();
 			boolean updateIntervalPassed = Math.abs(leftSeconds - cachedLeftSeconds) > UPDATE_INTERVAL_SECONDS;
 			if (leftSeconds != 0 && (updateIntervalPassed || timeModeUpdated)) {
@@ -106,6 +119,7 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 					updateTimeToGo(leftSeconds);
 				}
 			}
+			*/
 		}
 
 		if (leftSeconds == 0 && cachedLeftSeconds != 0) {

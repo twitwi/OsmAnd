@@ -19,14 +19,14 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 	public static final int TIME_CONTROL_WIDGET_STATE_TIME_TO_GO = R.id.time_control_widget_state_time_to_go;
 
 	private final boolean intermediate;
-	private final OsmandPreference<Boolean> arrivalTimeOrTimeToGo;
+	//private final OsmandPreference<Boolean> arrivalTimeOrTimeToGo;
 	private final OsmandPreference<DiffElevationType> typePreference;
 
 	public DiffElevationToPointWidgetState(@NonNull OsmandApplication app, @Nullable String customId, boolean intermediate) {
 		super(app);
 		this.intermediate = intermediate;
 		this.typePreference = registerTypePreference(customId);
-		this.arrivalTimeOrTimeToGo = registerTimeTypePref(customId);
+		//this.arrivalTimeOrTimeToGo = registerTimeTypePref(customId);
 	}
 
 	public boolean isIntermediate() {
@@ -34,8 +34,8 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 	}
 
 	@NonNull
-	public OsmandPreference<Boolean> getPreference() {
-		return arrivalTimeOrTimeToGo;
+	public OsmandPreference<DiffElevationType> getPreference() {
+		return typePreference;
 	}
 
 	@NonNull
@@ -66,7 +66,8 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 
 	@Override
 	public void copyPrefsFromMode(@NonNull ApplicationMode sourceAppMode, @NonNull ApplicationMode appMode, @Nullable String customId){
-		registerTimeTypePref(customId).setModeValue(appMode, arrivalTimeOrTimeToGo.getModeValue(sourceAppMode));
+		//registerTimeTypePref(customId).setModeValue(appMode, arrivalTimeOrTimeToGo.getModeValue(sourceAppMode));
+		registerTypePreference(customId).setModeValue(appMode, typePreference.getModeValue(sourceAppMode));
 	}
 
 	@NonNull
