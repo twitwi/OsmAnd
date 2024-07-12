@@ -46,16 +46,12 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 	@NonNull
 	@Override
 	public String getTitle() {
-		return TimeToNavigationPointState
-				.getState(intermediate, arrivalTimeOrTimeToGo.get())
-				.getTitle(app);
+		return getDiffElevationType().getTitle(app);
 	}
 
 	@Override
 	public int getSettingsIconId(boolean nightMode) {
-		return TimeToNavigationPointState
-				.getState(intermediate, arrivalTimeOrTimeToGo.get())
-				.getIconId(nightMode);
+		return nightMode ? getDiffElevationType().nightIconId : getDiffElevationType().dayIconId;
 	}
 
 	@Override
@@ -91,9 +87,9 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 	}
 
 	public enum DiffElevationType {
-		POSITIVE_DIFF(R.string.map_widget_time, R.drawable.widget_intermediate_time_to_go_day, R.drawable.widget_intermediate_time_to_go_night),
-		NEGATIVE_DIFF(R.string.access_arrival_time, R.drawable.widget_intermediate_time_day, R.drawable.widget_intermediate_time_night),
-		BOTH_DIFF(R.string.map_widget_time, R.drawable.widget_destination_time_to_go_day, R.drawable.widget_destination_time_to_go_night);
+		POSITIVE_DIFF(R.string.map_widget_time, R.drawable.widget_destination_diff_elevation_day, R.drawable.widget_destination_diff_elevation_night),
+		NEGATIVE_DIFF(R.string.access_arrival_time, R.drawable.widget_destination_diff_elevation_day, R.drawable.widget_destination_diff_elevation_night),
+		BOTH_DIFF(R.string.map_widget_time, R.drawable.widget_destination_diff_elevation_day, R.drawable.widget_destination_diff_elevation_night);
 
 		@StringRes
 		public final int titleId;
@@ -128,53 +124,4 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 		}
 	}
 
-	public enum TimeToNavigationPointState {
-
-		INTERMEDIATE_TIME_TO_GO(R.string.map_widget_time, R.drawable.widget_intermediate_time_to_go_day, R.drawable.widget_intermediate_time_to_go_night, true),
-		INTERMEDIATE_ARRIVAL_TIME(R.string.access_arrival_time, R.drawable.widget_intermediate_time_day, R.drawable.widget_intermediate_time_night, true),
-		DESTINATION_TIME_TO_GO(R.string.map_widget_time, R.drawable.widget_destination_time_to_go_day, R.drawable.widget_destination_time_to_go_night, false),
-		DESTINATION_ARRIVAL_TIME(R.string.access_arrival_time, R.drawable.widget_time_to_distance_day, R.drawable.widget_time_to_distance_night, false);
-
-		@StringRes
-		public final int titleId;
-		@DrawableRes
-		public final int dayIconId;
-		@DrawableRes
-		public final int nightIconId;
-		public final boolean intermediate;
-
-		TimeToNavigationPointState(@StringRes int titleId,
-		                           @DrawableRes int dayIconId,
-		                           @DrawableRes int nightIconId,
-		                           boolean intermediate) {
-			this.titleId = titleId;
-			this.dayIconId = dayIconId;
-			this.nightIconId = nightIconId;
-			this.intermediate = intermediate;
-		}
-
-		@NonNull
-		public String getTitle(@NonNull Context context) {
-			int timeToId = intermediate
-					? R.string.map_widget_time_to_intermediate
-					: R.string.map_widget_time_to_destination;
-			String timeToString = context.getString(timeToId);
-			String stateTitle = context.getString(titleId);
-			return context.getString(R.string.ltr_or_rtl_combine_via_colon, timeToString, stateTitle);
-		}
-
-		@DrawableRes
-		public int getIconId(boolean nightMode) {
-			return nightMode ? nightIconId : dayIconId;
-		}
-
-		@NonNull
-		public static TimeToNavigationPointState getState(boolean intermediate, boolean arrivalOtherwiseTimeToGo) {
-			if (intermediate) {
-				return arrivalOtherwiseTimeToGo ? INTERMEDIATE_ARRIVAL_TIME : INTERMEDIATE_TIME_TO_GO;
-			} else {
-				return arrivalOtherwiseTimeToGo ? DESTINATION_ARRIVAL_TIME : DESTINATION_TIME_TO_GO;
-			}
-		}
-	}
 }
