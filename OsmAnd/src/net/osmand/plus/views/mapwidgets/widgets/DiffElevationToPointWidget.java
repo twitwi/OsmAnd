@@ -8,6 +8,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import net.osmand.gpx.GPXFile;
 import net.osmand.plus.R;
 import net.osmand.plus.activities.MapActivity;
 import net.osmand.plus.routing.RouteCalculationResult;
@@ -111,6 +112,9 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 		*/
 
 		if (routingHelper.isRouteCalculated()) {
+
+			routingHelper.updateListDiffElevation();
+
 			// maybe leftDiffEle......
 			leftSeconds = widgetState.isIntermediate() ? routingHelper.getLeftTimeNextIntermediate() : routingHelper.getLeftTime();
 			boolean updateIntervalPassed = Math.abs(leftSeconds - cachedLeftSeconds) > UPDATE_INTERVAL_SECONDS;

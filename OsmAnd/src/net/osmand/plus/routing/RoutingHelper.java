@@ -1,5 +1,7 @@
 package net.osmand.plus.routing;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -10,6 +12,7 @@ import net.osmand.ResultMatcher;
 import net.osmand.data.LatLon;
 import net.osmand.data.ValueHolder;
 import net.osmand.gpx.GPXFile;
+import net.osmand.gpx.GPXTrackAnalysis;
 import net.osmand.plus.NavigationService;
 import net.osmand.plus.OsmandApplication;
 import net.osmand.plus.R;
@@ -24,6 +27,7 @@ import net.osmand.plus.settings.backend.ApplicationMode;
 import net.osmand.plus.settings.backend.OsmAndAppCustomization.OsmAndAppCustomizationListener;
 import net.osmand.plus.settings.backend.OsmandSettings;
 import net.osmand.plus.settings.enums.MetricsConstants;
+import net.osmand.plus.track.helpers.GpxUiHelper;
 import net.osmand.plus.utils.OsmAndFormatter;
 import net.osmand.router.GpxRouteApproximation;
 import net.osmand.router.RouteExporter;
@@ -762,6 +766,13 @@ public class RoutingHelper {
 		return route.getDistanceToNextIntermediate(lastFixedLocation);
 	}
 
+	public void updateListDiffElevation() {
+		if (route.isCalculated()) {
+			GPXFile gpx = GpxUiHelper.makeGpxFromLocations(route.getImmutableAllLocations(), app); //generateGPXFileWithRoute(route, "dummy");
+			GPXTrackAnalysis analysis = gpx.getAnalysis(0);
+			route.updateListDiffElevation(gpx);
+		}
+	}
 	public RouteCalculationResult.DiffElevation getLeftDiffElevation() {
 		return route.getDiffElevationToFinish(lastFixedLocation);
 	}
@@ -942,4 +953,5 @@ public class RoutingHelper {
 			voiceRouter.newRouteIsCalculated(true);
 		}
 	}
+
 }
