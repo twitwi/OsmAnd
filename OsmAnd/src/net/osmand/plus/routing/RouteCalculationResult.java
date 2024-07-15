@@ -48,6 +48,7 @@ public class RouteCalculationResult {
 	private final List<AlarmInfo> alarmInfo;
 	private final String errorMessage;
 	private final int[] listDistance;
+	private final DiffElevation[] listDiffElevation;
 	private final int[] intermediatePoints;
 
 	// Route information
@@ -89,6 +90,7 @@ public class RouteCalculationResult {
 		this.locations = new ArrayList<>();
 		this.segments = new ArrayList<>();
 		this.listDistance = new int[0];
+		this.listDiffElevation = new DiffElevation[0];
 		this.directions = new ArrayList<>();
 		this.alarmInfo = new ArrayList<>();
 		this.routeService = null;
@@ -125,7 +127,8 @@ public class RouteCalculationResult {
 		this.locations = Collections.unmodifiableList(locations);
 		this.segments = new ArrayList<>();
 		this.listDistance = new int[locations.size()];
-		updateListDistanceTime(this.listDistance, this.locations);
+		this.listDiffElevation = new DiffElevation[locations.size()];
+		updateListDistanceTime(this.listDistance, this.listDiffElevation, this.locations);
 		this.alarmInfo = new ArrayList<>();
 		calculateIntermediateIndexes(params.ctx, this.locations, params.intermediates, localDirections, this.intermediatePoints);
 		this.directions = Collections.unmodifiableList(localDirections);
@@ -181,8 +184,9 @@ public class RouteCalculationResult {
 		this.locations = Collections.unmodifiableList(locations);
 		this.segments = Collections.unmodifiableList(segments);
 		this.listDistance = new int[locations.size()];
+		this.listDiffElevation = new DiffElevation[locations.size()];
 		calculateIntermediateIndexes(ctx, this.locations, intermediates, computeDirections, this.intermediatePoints);
-		updateListDistanceTime(this.listDistance, this.locations);
+		updateListDistanceTime(this.listDistance, this.listDiffElevation, this.locations);
 		this.appMode = mode;
 		this.routeService = mode.getRouteService();
 
@@ -970,12 +974,16 @@ public class RouteCalculationResult {
 	 * PREPARATION
 	 * At the end always update listDistance local vars and time
 	 */
-	private static void updateListDistanceTime(int[] listDistance, List<Location> locations) {
+	private static void updateListDistanceTime(int[] listDistance, DiffElevation[] listDiffElevation, List<Location> locations) {
 		if (listDistance.length > 0) {
 			listDistance[locations.size() - 1] = 0;
+			listDiffElevation[locations.size() - 1] = new DiffElevation(0,0);
 			for (int i = locations.size() - 1; i > 0; i--) {
 				listDistance[i - 1] = Math.round(locations.get(i - 1).distanceTo(locations.get(i)));
 				listDistance[i - 1] += listDistance[i];
+				double diffEle = locations.get(i).getAltitude() - locations.get(i - 1).getAltitude();
+				listDiffElevation[i - 1] = listDiffElevation[i].newWithDelta(diffEle);
+				android.util.Log.i("ZZZZZZZZZZZZZZZZZZZZZZZZZ", "updateListDistanceTime: "+Arrays.toString(listDiffElevation));
 			}
 		}
 	}
@@ -1366,6 +1374,29 @@ public class RouteCalculationResult {
 		return 0;
 	}
 
+	public DiffElevation getDiffElevationToFinish(Location fromLoc) {
+		Location ap = this.currentStraightAnglePoint;
+		int rp = Math.max(currentStraightAngleRoute, currentRoute);
+		if (listDiffElevation != null && rp < listDiffElevation.length) {
+			DiffElevation diffElevation = listDiffElevation[rp];
+			Location l = locations.get(rp);
+			if (ap != null && ap.getAltitude() != 0) {
+				if (fromLoc != null && fromLoc.getAltitude() != 0) {
+					diffElevation = diffElevation.newWithDelta(ap.getAltitude() - fromLoc.getAltitude());
+					//dist += fromLoc.distanceTo(ap);
+				}
+				diffElevation = diffElevation.newWithDelta(l.getAltitude() - ap.getAltitude());
+				//dist += ap.distanceTo(l);
+			} else if (fromLoc != null && fromLoc.getAltitude() != 0) {
+				diffElevation = diffElevation.newWithDelta(l.getAltitude() - fromLoc.getAltitude());
+				//dist += fromLoc.distanceTo(l);
+			}
+			return diffElevation;
+		}
+		return new DiffElevation();
+	}
+
+
 	public int getDistanceToNextIntermediate(Location fromLoc) {
 		int dist = getDistanceToFinish(fromLoc);
 		if (listDistance != null && currentRoute < listDistance.length) {
@@ -1474,4 +1505,33 @@ public class RouteCalculationResult {
 		private int directionInfoInd;
 	}
 
+	public static class DiffElevation {
+		public final double up;
+		public final double down;
+
+		public DiffElevation() {
+			this.up = 0;
+			this.down = 0;
+		}
+		public DiffElevation(double up, double down) {
+			this.up = up;
+			this.down = down;
+		}
+
+		public DiffElevation newWithDelta(double diffEle) {
+			if (diffEle > 0) {
+				return new DiffElevation(this.up + diffEle, this.down);
+			} else {
+				return new DiffElevation(this.up, this.down - diffEle);
+			}
+		}
+
+		@Override
+		public String toString() {
+			return "DiffElevation{" +
+					"up=" + up +
+					", down=" + down +
+					'}';
+		}
+	}
 }

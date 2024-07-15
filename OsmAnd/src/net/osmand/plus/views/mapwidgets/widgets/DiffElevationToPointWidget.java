@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 
 import net.osmand.plus.R;
 import net.osmand.plus.activities.MapActivity;
+import net.osmand.plus.routing.RouteCalculationResult;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.settings.backend.ApplicationMode;
 import net.osmand.plus.settings.backend.preferences.OsmandPreference;
@@ -71,10 +72,12 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 		return widgetState.isIntermediate();
 	}
 
+	/*
 	@NonNull
 	public OsmandPreference<Boolean> getPreference() {
 		return arrivalTimeOtherwiseTimeToGoPref;
 	}
+	 */
 
 	@Nullable
 	@Override
@@ -108,18 +111,13 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 		*/
 
 		if (routingHelper.isRouteCalculated()) {
-			/*
+			// maybe leftDiffEle......
 			leftSeconds = widgetState.isIntermediate() ? routingHelper.getLeftTimeNextIntermediate() : routingHelper.getLeftTime();
 			boolean updateIntervalPassed = Math.abs(leftSeconds - cachedLeftSeconds) > UPDATE_INTERVAL_SECONDS;
-			if (leftSeconds != 0 && (updateIntervalPassed || timeModeUpdated)) {
+			if (leftSeconds != 0 && (updateIntervalPassed || modeUpdated)) {
 				cachedLeftSeconds = leftSeconds;
-				if (arrivalTimeOtherwiseTimeToGoPref.get()) {
-					updateArrivalTime(leftSeconds);
-				} else {
-					updateTimeToGo(leftSeconds);
-				}
+				updateDiffElevationToGo(routingHelper.getLeftDiffElevation());
 			}
-			*/
 		}
 
 		if (leftSeconds == 0 && cachedLeftSeconds != 0) {
@@ -138,13 +136,19 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 		setContentTitle(title);
 	}
 
+	private void updateDiffElevationToGo(RouteCalculationResult.DiffElevation diffElevation) {
+		String formattedAltUp = OsmAndFormatter.getFormattedAlt(diffElevation.up, app);
+		String formattedAltDown = OsmAndFormatter.getFormattedAlt(diffElevation.down, app);
+		setText(formattedAltUp + "+", formattedAltDown + "-");
+	}
+
 	private void updateArrivalTime(int leftSeconds) {
 		long arrivalTime = System.currentTimeMillis() + leftSeconds * 1000L;
 		setTimeText(arrivalTime);
 	}
 
 	private void updateTimeToGo(int leftSeconds) {
-		String formattedLeftTime = OsmAndFormatter.getFormattedDurationShortMinutes(leftSeconds)+"!!!";
+		String formattedLeftTime = OsmAndFormatter.getFormattedDurationShortMinutes(leftSeconds);
 		setText(formattedLeftTime, getUnits(leftSeconds));
 	}
 
@@ -161,7 +165,7 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 
 	@Nullable
 	protected String getAdditionalWidgetName() {
-		if (widgetState != null && arrivalTimeOtherwiseTimeToGoPref != null) {
+		if (widgetState != null/* && arrivalTimeOtherwiseTimeToGoPref != null*/) {
 			return getString(getCurrentState().titleId);
 		}
 		return null;
