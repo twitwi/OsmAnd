@@ -1026,6 +1026,7 @@ You need to activate the sensor so OsmAnd can find it.</string>
     <string name="first_marker_widget_desc">You can configure the widget to show the distance or Estimated time of arrival left to the first map marker.</string>
     <string name="time_to_destination_widget_desc">The widget shows \"Arrival time\" or \"Time to go\" to the last destination point. Time is constantly updated during navigation and it is equal to the route time from the current location.</string>
     <string name="time_to_intermediate_widget_desc">The widget shows \"Arrival time\" or \"Time to go\" to the first intermediate point. Time is constantly updated during navigation, once intermediate points is passed, the time will be updated to the next intermediate point.</string>
+    <string name="diff_elevation_to_intermediate_widget_desc">The widget shows \"Elevation difference\" (uphill, downhill or both) to the first intermediate point. Elevation difference is constantly updated during navigation, once intermediate points is passed, the elevation difference will be updated to the next intermediate point.</string>
     <string name="diff_elevation_to_destination_widget_desc">The widget shows \"Elevation difference\" (uphill, downhill or both) to the last destination point. Elevation difference is constantly updated during navigation and it is equal to the route elevation difference from the current location.</string>
     <string name="distance_to_intermediate_widget_desc">The widget shows the distance left to the first intermediate point. Once intermediate points is passed, the distance will be updated to the next intermediate point.</string>
     <string name="distance_to_destination_widget_desc">The widget shows the distance left to the last destination point.</string>
@@ -1088,6 +1089,7 @@ You need to activate the sensor so OsmAnd can find it.</string>
     <string name="map_widget_time_to_destination">Time to destination</string>
     <string name="map_widget_time_to_intermediate">Time to intermediate</string>
     <string name="map_widget_diff_elevation_to_destination">Elevation difference to destination</string>
+    <string name="map_widget_diff_elevation_to_intermediate">Elevation difference to intermediate</string>
     <string name="map_widget_distance_to_intermediate">Distance to intermediate</string>
     <string name="radius_ruler_mode_desc">Tapping the widget switches to \“Radius ruler\” mode.</string>
     <string name="explore_plans">Explore Plans</string>

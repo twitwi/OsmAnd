@@ -88,6 +88,10 @@ public class MapWidgetsFactory {
 				TimeToNavigationPointWidgetState state = new TimeToNavigationPointWidgetState(app, customId, false);
 				return new TimeToNavigationPointWidget(mapActivity, state, customId, panel);
 			}
+			case DIFF_ELEVATION_TO_INTERMEDIATE: {
+				DiffElevationToPointWidgetState state = new DiffElevationToPointWidgetState(app, customId, true);
+				return new DiffElevationToPointWidget(mapActivity, state, customId, panel);
+			}
 			case DIFF_ELEVATION_TO_DESTINATION: {
 				DiffElevationToPointWidgetState state = new DiffElevationToPointWidgetState(app, customId, false);
 				return new DiffElevationToPointWidget(mapActivity, state, customId, panel);

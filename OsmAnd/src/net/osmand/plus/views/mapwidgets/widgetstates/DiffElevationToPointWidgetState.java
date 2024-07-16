@@ -15,27 +15,23 @@ import net.osmand.util.Algorithms;
 
 public class DiffElevationToPointWidgetState extends WidgetState {
 
-	public static final int TIME_CONTROL_WIDGET_STATE_ARRIVAL_TIME = R.id.time_control_widget_state_arrival_time;
-	public static final int TIME_CONTROL_WIDGET_STATE_TIME_TO_GO = R.id.time_control_widget_state_time_to_go;
-
-	private final boolean intermediate;
-	//private final OsmandPreference<Boolean> arrivalTimeOrTimeToGo;
-	private final OsmandPreference<DiffElevationType> typePreference;
+	private final OsmandPreference<DiffElevationType> typePreference; // TODO: rename displayPreference display
+	private final OsmandPreference<DiffElevationTarget> targetPreference;
 
 	public DiffElevationToPointWidgetState(@NonNull OsmandApplication app, @Nullable String customId, boolean intermediate) {
 		super(app);
-		this.intermediate = intermediate;
 		this.typePreference = registerTypePreference(customId);
-		//this.arrivalTimeOrTimeToGo = registerTimeTypePref(customId);
-	}
-
-	public boolean isIntermediate() {
-		return intermediate;
+		this.targetPreference = registerTargetPref(customId, intermediate ? DiffElevationTarget.NEXT_INTERMEDIATE : DiffElevationTarget.DESTINATION);
 	}
 
 	@NonNull
 	public OsmandPreference<DiffElevationType> getPreference() {
 		return typePreference;
+	}
+
+	@NonNull
+	public OsmandPreference<DiffElevationTarget> getTargetPreference() {
+		return targetPreference;
 	}
 
 	@NonNull
@@ -68,6 +64,7 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 	public void copyPrefsFromMode(@NonNull ApplicationMode sourceAppMode, @NonNull ApplicationMode appMode, @Nullable String customId){
 		//registerTimeTypePref(customId).setModeValue(appMode, arrivalTimeOrTimeToGo.getModeValue(sourceAppMode));
 		registerTypePreference(customId).setModeValue(appMode, typePreference.getModeValue(sourceAppMode));
+		registerTargetPref(customId, null).setModeValue(appMode, targetPreference.getModeValue(sourceAppMode));
 	}
 
 	@NonNull
@@ -78,13 +75,19 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 		}
 		return settings.registerEnumStringPreference(prefId, DiffElevationType.POSITIVE_DIFF, DiffElevationType.values(), DiffElevationType.class).makeProfile();
 	}
+
 	@NonNull
-	private OsmandPreference<Boolean> registerTimeTypePref(@Nullable String customId) {
-		String prefId = intermediate ? "show_arrival_time" : "show_intermediate_arrival_time";
+	private OsmandPreference<DiffElevationTarget> registerTargetPref(@Nullable String customId, DiffElevationTarget init) {
+		String prefId = "diff_elevation_target";
 		if (!Algorithms.isEmpty(customId)) {
 			prefId += customId;
 		}
-		return settings.registerBooleanPreference(prefId, true).makeProfile();
+		if (init == null) init = DiffElevationTarget.DESTINATION;
+		return settings.registerEnumStringPreference(prefId, init, DiffElevationTarget.values(), DiffElevationTarget.class).makeProfile();
+	}
+
+	public enum DiffElevationTarget {
+		DESTINATION, NEXT_INTERMEDIATE, NEXT_STRETCH;
 	}
 
 	public enum DiffElevationType {

@@ -1,5 +1,7 @@
 package net.osmand.plus.views.mapwidgets.widgets;
 
+import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_TO_DESTINATION;
+import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_TO_INTERMEDIATE;
 import static net.osmand.plus.views.mapwidgets.WidgetType.TIME_TO_DESTINATION;
 import static net.osmand.plus.views.mapwidgets.WidgetType.TIME_TO_INTERMEDIATE;
 
@@ -35,7 +37,7 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	private int cachedLeftSeconds;
 
 	public DiffElevationToPointWidget(@NonNull MapActivity mapActivity, @NonNull DiffElevationToPointWidgetState widgetState, @Nullable String customId, @Nullable WidgetsPanel widgetsPanel) {
-		super(mapActivity, getWidgetType(widgetState.isIntermediate()), customId, widgetsPanel);
+		super(mapActivity, getWidgetType(widgetState), customId, widgetsPanel);
 		this.widgetState = widgetState;
 		this.routingHelper = app.getRoutingHelper();
 		//this.arrivalTimeOtherwiseTimeToGoPref = widgetState.getPreference();
@@ -50,8 +52,15 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 		updateWidgetName();
 	}
 
-	private static WidgetType getWidgetType(boolean isIntermediate) {
-		return isIntermediate ? TIME_TO_INTERMEDIATE : TIME_TO_DESTINATION;
+	private static WidgetType getWidgetType(DiffElevationToPointWidgetState widgetState) {
+		switch (widgetState.getTargetPreference().get()) {
+			case DESTINATION:
+				return DIFF_ELEVATION_TO_DESTINATION;
+			case NEXT_INTERMEDIATE:
+				return DIFF_ELEVATION_TO_INTERMEDIATE;
+			default: // TODO
+				return null;
+		}
 	}
 
 	@Override
@@ -62,10 +71,6 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 			mapActivity.refreshMap();
 			updateWidgetName();
 		};
-	}
-
-	public boolean isIntermediate() {
-		return widgetState.isIntermediate();
 	}
 
 	/*
@@ -108,7 +113,8 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 
 		if (routingHelper.isRouteCalculated()) {
 			// maybe leftDiffEle......
-			leftSeconds = widgetState.isIntermediate() ? routingHelper.getLeftTimeNextIntermediate() : routingHelper.getLeftTime();
+			boolean isIntermediate = false; // TODO
+			leftSeconds = isIntermediate ? routingHelper.getLeftTimeNextIntermediate() : routingHelper.getLeftTime();
 			boolean updateIntervalPassed = Math.abs(leftSeconds - cachedLeftSeconds) > UPDATE_INTERVAL_SECONDS;
 			if (leftSeconds != 0 && (updateIntervalPassed || modeUpdated)) {
 				cachedLeftSeconds = leftSeconds;
@@ -123,6 +129,7 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	}
 
 	private void updateIcons() {
+		// TODO all getters etc should combined the two "preferences"
 		DiffElevationToPointWidgetState.DiffElevationType state = getCurrentState();
 		setIcons(state.dayIconId, state.nightIconId);
 	}
