@@ -982,11 +982,37 @@ public class RouteCalculationResult {
 	private static void updateListDistanceTime(int[] listDistance, DiffElevation[] listDiffElevation, List<Location> locations) {
 		if (listDistance.length > 0) {
 			listDistance[locations.size() - 1] = 0;
-			listDiffElevation[locations.size() - 1] = new DiffElevation(0,0);
+			DiffElevation zeroDiff = new DiffElevation(0,0);
+			listDiffElevation[locations.size() - 1] = zeroDiff;
 			for (int i = locations.size() - 1; i > 0; i--) {
 				listDistance[i - 1] = Math.round(locations.get(i - 1).distanceTo(locations.get(i)));
 				listDistance[i - 1] += listDistance[i];
-				double diffEle = locations.get(i).getAltitude() - locations.get(i - 1).getAltitude();
+			}
+			double[] elevations = new double[locations.size()];
+			for (int i = locations.size() - 1; i >= 0; i--) {
+				elevations[i] = locations.get(i).getAltitude();
+				if (elevations[i] == 0) {
+					if (i == locations.size()-1) {
+						elevations[i] = locations.get(i-1).getAltitude();
+					} else if (i > 0){
+						elevations[i] = elevations[i + 1];
+					}
+				}
+			}
+			for (int i = locations.size() - 1; i > 0; i--) {
+				// prefill as segment values, will cumulate later
+				double diffEle = elevations[i] - elevations[i-1];
+				listDiffElevation[i - 1] = zeroDiff.newWithDelta(diffEle);
+				//listDiffElevation[i - 1] = listDiffElevation[i].newWithDelta(diffEle);
+			}
+			android.util.Log.e("ZZZZZZZZZZZZZZZZZ", ""+Arrays.toString(elevations));
+			android.util.Log.e("ZZZZZZZZZZZZZZZZZ", ""+Arrays.toString(listDistance));
+			android.util.Log.e("ZZZZZZZZZZZZZZZZZ", ""+Arrays.toString(listDiffElevation));
+			refineBasedOnExtremum(listDiffElevation, listDistance, elevations, 0, listDistance.length - 1);
+			android.util.Log.e("ZZZZZZZZZZZZZZZZZ", ""+Arrays.toString(listDiffElevation));
+			// cumulative values
+			for (int i = locations.size() - 1; i > 0; i--) {
+				double diffEle = listDiffElevation[i - 1].up - listDiffElevation[i - 1].down;
 				listDiffElevation[i - 1] = listDiffElevation[i].newWithDelta(diffEle);
 			}
 	/*
@@ -1019,7 +1045,85 @@ public class RouteCalculationResult {
 		}
 	}
 
+	static void refineBasedOnExtremum(DiffElevation[] listDiffElevation, int[] listDistance, double[] elevations, int start, int end) {
+		double firstPointDist = listDistance[start];
+		double endPointDist = listDistance[end];
+		double firstPointEle = elevations[start];
+		double endPointEle = elevations[end];
+		int max = start;
+		double maxDiff = 7.0;
+
+		for(int i = start + 1; i < end; ++i) {
+			double md = Math.abs(elevations[i] - firstPointEle - (endPointEle-firstPointEle)*(listDistance[i]-firstPointDist)/(endPointDist-firstPointDist));
+			android.util.Log.e("ZZZ", start+" "+i+" "+end+" "+md+" vs "+maxDiff);
+			if (md > maxDiff) {
+				max = i;
+				maxDiff = md;
+			}
+		}
+
+		if (max != start) {
+			refineBasedOnExtremum(listDiffElevation, listDistance, elevations, start, max);
+			refineBasedOnExtremum(listDiffElevation, listDistance, elevations, max, end);
+		} else {
+			// force monotonic
+			if (endPointEle - firstPointEle >= 0) {
+				// upward segment
+				android.util.Log.e("ZZZ ", "upward");
+				double carry = 0;
+				for (int i = start; i < end; i++) {
+					if (listDiffElevation[i].down > 0) {
+						carry += listDiffElevation[i].down;
+						listDiffElevation[i] = new DiffElevation();
+					}
+					for (int j = i; j >= start; j--) {
+						if (carry == 0) break;
+						double delta = Math.min(listDiffElevation[j].up, carry);
+						listDiffElevation[j] = listDiffElevation[j].newWithSubtractingDelta(delta);
+						carry -= delta;
+					}
+					/*
+					if (carry > 0 && i > start) {
+						double delta = Math.min(listDiffElevation[i-1].up, carry);
+						android.util.Log.e("ZZZZ+", start+" "+end+" "+carry+" "+delta+" "+listDiffElevation[i-1]);
+						listDiffElevation[i-1] = listDiffElevation[i-1].newWithSubtractingDelta(delta);
+						carry -= delta;
+						android.util.Log.e("ZZZ..", " "+carry+" "+delta+" "+listDiffElevation[i-1]);
+					}
+
+					 */
+				}
+			} else {
+				android.util.Log.e("ZZZ ", "downward");
+				// downward segment
+				double carry = 0;
+				for (int i = start; i < end; i++) {
+					if (listDiffElevation[i].up > 0) {
+						carry += listDiffElevation[i].up;
+						listDiffElevation[i] = new DiffElevation();
+					}
+					for (int j = i; j >= start; j--) {
+						if (carry == 0) break;
+						double delta = Math.min(listDiffElevation[j].down, carry);
+						listDiffElevation[j] = listDiffElevation[j].newWithSubtractingDelta(-delta);
+						carry -= delta;
+					}
+					/*
+					if (carry > 0 && i > start) {
+						double delta = Math.min(listDiffElevation[i-1].down, carry);
+						android.util.Log.e("ZZZZ-", start+" "+end+" "+carry+" "+delta+" "+listDiffElevation[i-1]);
+						listDiffElevation[i-1] = listDiffElevation[i-1].newWithSubtractingDelta(-delta);
+						carry -= delta;
+						android.util.Log.e("ZZZ..", " "+carry+" "+delta+" "+listDiffElevation[i-1]);
+					}
+					 */
+				}
+			}
+		}
+	}
+
 	public void updateListDiffElevation(GPXFile gpx) {
+		if (true) return;
 		List<GPXUtilities.WptPt> points = gpx.getAllSegmentsPoints();
 		ElevationDiffsCalculator elevationDiffsCalc = new ElevationDiffsCalculator() {
 			@Override
