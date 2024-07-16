@@ -4767,6 +4767,7 @@ Download tile maps directly, or copy them as SQLite database files to OsmAnd\'s 
     <string name="map_widget_reset">Reset to default</string>
     <string name="map_widget_parking">Parking</string>
     <string name="map_widget_time">Time to go</string>
+    <string name="map_widget_diff_elevation">Elevation difference to go</string>
     <string name="map_widget_next_turn">Next turn</string>
     <string name="map_widget_next_turn_small">Next turn (small)</string>
     <string name="map_widget_next_next_turn">Second next turn</string>

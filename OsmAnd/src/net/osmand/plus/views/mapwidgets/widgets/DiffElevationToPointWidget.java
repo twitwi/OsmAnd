@@ -2,8 +2,6 @@ package net.osmand.plus.views.mapwidgets.widgets;
 
 import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_TO_DESTINATION;
 import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_TO_INTERMEDIATE;
-import static net.osmand.plus.views.mapwidgets.WidgetType.TIME_TO_DESTINATION;
-import static net.osmand.plus.views.mapwidgets.WidgetType.TIME_TO_INTERMEDIATE;
 
 import android.view.View;
 
@@ -15,7 +13,6 @@ import net.osmand.plus.activities.MapActivity;
 import net.osmand.plus.routing.RouteCalculationResult;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.settings.backend.ApplicationMode;
-import net.osmand.plus.settings.backend.preferences.OsmandPreference;
 import net.osmand.plus.utils.OsmAndFormatter;
 import net.osmand.plus.views.layers.base.OsmandMapLayer.DrawSettings;
 import net.osmand.plus.views.mapwidgets.WidgetType;
@@ -27,23 +24,18 @@ import java.util.concurrent.TimeUnit;
 
 public class DiffElevationToPointWidget extends SimpleWidget {
 
-	private static final long UPDATE_INTERVAL_SECONDS = 30;
+	private static final long UPDATE_INTERVAL_DIFF_ELEVATION = 10;
 
 	private final RoutingHelper routingHelper;
 	private final DiffElevationToPointWidgetState widgetState;
-	private final OsmandPreference<DiffElevationToPointWidgetState.DiffElevationType> typePreference;
-
-	private DiffElevationToPointWidgetState.DiffElevationType cachedTypePreference;
-	private int cachedLeftSeconds;
+	private DiffElevationToPointWidgetState.DiffElevationDisplay cachedDisplayPreference;
+	private double cachedRemaining;
 
 	public DiffElevationToPointWidget(@NonNull MapActivity mapActivity, @NonNull DiffElevationToPointWidgetState widgetState, @Nullable String customId, @Nullable WidgetsPanel widgetsPanel) {
 		super(mapActivity, getWidgetType(widgetState), customId, widgetsPanel);
 		this.widgetState = widgetState;
 		this.routingHelper = app.getRoutingHelper();
-		//this.arrivalTimeOtherwiseTimeToGoPref = widgetState.getPreference();
-		//this.cachedArrivalTimeOtherwiseTimeToGo = arrivalTimeOtherwiseTimeToGoPref.get();
-		this.typePreference = widgetState.getPreference();
-		this.cachedTypePreference = typePreference.get();
+		this.cachedDisplayPreference = widgetState.getDiffElevationDisplay();
 
 		setText(null, null);
 		updateIcons();
@@ -53,7 +45,7 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	}
 
 	private static WidgetType getWidgetType(DiffElevationToPointWidgetState widgetState) {
-		switch (widgetState.getTargetPreference().get()) {
+		switch (widgetState.getDiffElevationTarget()) {
 			case DESTINATION:
 				return DIFF_ELEVATION_TO_DESTINATION;
 			case NEXT_INTERMEDIATE:
@@ -73,13 +65,6 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 		};
 	}
 
-	/*
-	@NonNull
-	public OsmandPreference<Boolean> getPreference() {
-		return arrivalTimeOtherwiseTimeToGoPref;
-	}
-	 */
-
 	@Nullable
 	@Override
 	public WidgetState getWidgetState() {
@@ -94,52 +79,46 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 
 	@Override
 	protected void updateSimpleWidgetInfo(@Nullable DrawSettings drawSettings) {
-		int leftSeconds = 0;
+		double remaining = 0;
 
-		boolean modeUpdated = typePreference.get() != cachedTypePreference;
+		boolean modeUpdated = widgetState.getDiffElevationDisplay() != cachedDisplayPreference;
 		if (modeUpdated) {
-			cachedTypePreference = typePreference.get();
+			cachedDisplayPreference = widgetState.getDiffElevationDisplay();
 			updateIcons();
 			updateContentTitle();
 		}
-		/*
-		boolean timeModeUpdated = arrivalTimeOtherwiseTimeToGoPref.get() != cachedArrivalTimeOtherwiseTimeToGo;
-		if (timeModeUpdated) {
-			cachedArrivalTimeOtherwiseTimeToGo = arrivalTimeOtherwiseTimeToGoPref.get();
-			updateIcons();
-			updateContentTitle();
-		}
-		*/
 
 		if (routingHelper.isRouteCalculated()) {
-			// maybe leftDiffEle......
-			boolean isIntermediate = false; // TODO
-			leftSeconds = isIntermediate ? routingHelper.getLeftTimeNextIntermediate() : routingHelper.getLeftTime();
-			boolean updateIntervalPassed = Math.abs(leftSeconds - cachedLeftSeconds) > UPDATE_INTERVAL_SECONDS;
-			if (leftSeconds != 0 && (updateIntervalPassed || modeUpdated)) {
-				cachedLeftSeconds = leftSeconds;
-				updateDiffElevationToGo(routingHelper.getLeftDiffElevation(), cachedTypePreference);
+			remaining = routingHelper.getLeftDiffElevation().total();
+			boolean updateIntervalPassed = Math.abs(remaining - cachedRemaining) > UPDATE_INTERVAL_DIFF_ELEVATION;
+			boolean shouldUpdate = remaining != 0 && (updateIntervalPassed || modeUpdated);
+			if (shouldUpdate) {
+				switch (widgetState.getDiffElevationTarget()) {
+					case DESTINATION:
+						updateDiffElevationToGo(routingHelper.getLeftDiffElevation(), cachedDisplayPreference);
+						break;
+					case NEXT_INTERMEDIATE:
+						updateDiffElevationToGo(routingHelper.getLeftDiffElevationNextIntermediate(), cachedDisplayPreference);
+						break;
+				}
 			}
 		}
 
-		if (leftSeconds == 0 && cachedLeftSeconds != 0) {
-			cachedLeftSeconds = 0;
+		if (remaining == 0 && cachedRemaining != 0) {
+			cachedRemaining = 0;
 			setText(null, null);
 		}
 	}
 
 	private void updateIcons() {
-		// TODO all getters etc should combined the two "preferences"
-		DiffElevationToPointWidgetState.DiffElevationType state = getCurrentState();
-		setIcons(state.dayIconId, state.nightIconId);
+		setIcons(widgetState.getSettingsIconId(false), widgetState.getSettingsIconId(true));
 	}
 
 	private void updateContentTitle() {
-		String title = getCurrentState().getTitle(app);
-		setContentTitle(title);
+		setContentTitle(widgetState.getTitle());
 	}
 
-	private void updateDiffElevationToGo(RouteCalculationResult.DiffElevation diffElevation, DiffElevationToPointWidgetState.DiffElevationType cachedTypePreference) {
+	private void updateDiffElevationToGo(RouteCalculationResult.DiffElevation diffElevation, DiffElevationToPointWidgetState.DiffElevationDisplay cachedTypePreference) {
 		String formattedAltUp = OsmAndFormatter.getFormattedAlt(diffElevation.up, app);
 		String formattedAltDown = OsmAndFormatter.getFormattedAlt(diffElevation.down, app);
 		switch(cachedTypePreference) {
@@ -179,7 +158,7 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	@Nullable
 	protected String getAdditionalWidgetName() {
 		if (widgetState != null/* && arrivalTimeOtherwiseTimeToGoPref != null*/) {
-			return getString(getCurrentState().titleId);
+			return widgetState.getTitle();
 		}
 		return null;
 	}
@@ -187,9 +166,9 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	@Nullable
 	protected String getWidgetName() {
 		if (widgetState != null) {
-			DiffElevationToPointWidgetState.DiffElevationType state = getCurrentState();
+			DiffElevationToPointWidgetState.DiffElevationDisplay state = getCurrentState();
 			//if (state == TimeToNavigationPointState.INTERMEDIATE_ARRIVAL_TIME || state == TimeToNavigationPointState.INTERMEDIATE_TIME_TO_GO) {
-			if (state == DiffElevationToPointWidgetState.DiffElevationType.POSITIVE_DIFF) {
+			if (state == DiffElevationToPointWidgetState.DiffElevationDisplay.POSITIVE_DIFF) {
 					return getString(R.string.rendering_attr_smoothness_intermediate_name);
 			} else {
 				return getString(R.string.route_descr_destination);
@@ -199,8 +178,8 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	}
 
 	@NonNull
-	private DiffElevationToPointWidgetState.DiffElevationType getCurrentState() {
-		return widgetState.getDiffElevationType();
+	private DiffElevationToPointWidgetState.DiffElevationDisplay getCurrentState() {
+		return widgetState.getDiffElevationDisplay();
 	}
 
 }

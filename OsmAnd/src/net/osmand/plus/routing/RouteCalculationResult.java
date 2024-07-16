@@ -1453,6 +1453,19 @@ public class RouteCalculationResult {
 		return 0;
 	}
 
+	public int getDistanceToNextIntermediate(Location fromLoc) {
+		int dist = getDistanceToFinish(fromLoc);
+		if (listDistance != null && currentRoute < listDistance.length) {
+			if (nextIntermediate >= intermediatePoints.length) {
+				return 0;
+			} else {
+				int directionInd = intermediatePoints[nextIntermediate];
+				return dist - getListDistance(directions.get(directionInd).routePointOffset);
+			}
+		}
+		return 0;
+	}
+
 	public DiffElevation getDiffElevationToFinish(Location fromLoc) {
 		Location ap = this.currentStraightAnglePoint;
 		int rp = Math.max(currentStraightAngleRoute, currentRoute);
@@ -1472,19 +1485,18 @@ public class RouteCalculationResult {
 		return new DiffElevation();
 	}
 
-	public int getDistanceToNextIntermediate(Location fromLoc) {
-		int dist = getDistanceToFinish(fromLoc);
-		if (listDistance != null && currentRoute < listDistance.length) {
+	public DiffElevation getDiffElevationToNextIntermediate(Location fromLoc) {
+		DiffElevation diffElevation = getDiffElevationToFinish(fromLoc);
+		if (listDiffElevation != null && currentRoute < listDiffElevation.length) {
 			if (nextIntermediate >= intermediatePoints.length) {
-				return 0;
+				return new DiffElevation();
 			} else {
 				int directionInd = intermediatePoints[nextIntermediate];
-				return dist - getListDistance(directions.get(directionInd).routePointOffset);
+				return diffElevation.minus(getListDiffElevation(directions.get(directionInd).routePointOffset));
 			}
 		}
-		return 0;
+		return new DiffElevation();
 	}
-
 	public int getIndexOfIntermediate(int countFromLast) {
 		int j = intermediatePoints.length - countFromLast - 1;
 		if (j < intermediatePoints.length && j >= 0) {
@@ -1554,6 +1566,10 @@ public class RouteCalculationResult {
 		return listDistance.length > index ? listDistance[index] : 0;
 	}
 
+	private DiffElevation getListDiffElevation(int index) {
+		return listDiffElevation.length > index ? listDiffElevation[index] : new DiffElevation();
+	}
+
 	public int getCurrentStraightAngleRoute() {
 		return Math.max(currentStraightAngleRoute, currentRoute);
 	}
@@ -1594,6 +1610,10 @@ public class RouteCalculationResult {
 			this.down = down;
 		}
 
+		public DiffElevation minus(DiffElevation o) {
+			return new DiffElevation(up - o.up, down - o.down);
+		}
+
 		public DiffElevation newWithDelta(double diffEle) {
 			if (diffEle > 0) {
 				return new DiffElevation(this.up + diffEle, this.down);
@@ -1609,6 +1629,10 @@ public class RouteCalculationResult {
 			}
 		}
 
+		public double total() {
+			return up + down;
+		}
+
 		@Override
 		public String toString() {
 			return "DiffElevation{" +
@@ -1616,5 +1640,6 @@ public class RouteCalculationResult {
 					", down=" + down +
 					'}';
 		}
+
 	}
 }

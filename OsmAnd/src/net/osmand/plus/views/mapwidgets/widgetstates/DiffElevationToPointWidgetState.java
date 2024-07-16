@@ -1,7 +1,5 @@
 package net.osmand.plus.views.mapwidgets.widgetstates;
 
-import android.content.Context;
-
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,46 +11,54 @@ import net.osmand.plus.settings.backend.ApplicationMode;
 import net.osmand.plus.settings.backend.preferences.OsmandPreference;
 import net.osmand.util.Algorithms;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DiffElevationToPointWidgetState extends WidgetState {
 
-	private final OsmandPreference<DiffElevationType> typePreference; // TODO: rename displayPreference display
+	private final OsmandPreference<DiffElevationDisplay> displayPreference;
 	private final OsmandPreference<DiffElevationTarget> targetPreference;
 
 	public DiffElevationToPointWidgetState(@NonNull OsmandApplication app, @Nullable String customId, boolean intermediate) {
 		super(app);
-		this.typePreference = registerTypePreference(customId);
+		this.displayPreference = registerTypePreference(customId);
 		this.targetPreference = registerTargetPref(customId, intermediate ? DiffElevationTarget.NEXT_INTERMEDIATE : DiffElevationTarget.DESTINATION);
 	}
 
 	@NonNull
-	public OsmandPreference<DiffElevationType> getPreference() {
-		return typePreference;
+	public DiffElevationDisplay getDiffElevationDisplay() {
+		return displayPreference.get();
 	}
 
 	@NonNull
-	public OsmandPreference<DiffElevationTarget> getTargetPreference() {
-		return targetPreference;
+	public DiffElevationTarget getDiffElevationTarget() {
+		return targetPreference.get();
 	}
 
-	@NonNull
-	public DiffElevationType getDiffElevationType() {
-		return typePreference.get();
+	private Info getInfo() {
+		return infos.get(getDiffElevationDisplay()).get(getDiffElevationTarget());
 	}
-
 	@NonNull
 	@Override
 	public String getTitle() {
-		return getDiffElevationType().getTitle(app);
+		/* TODO?
+		int timeToId = R.string.map_widget_time_to_intermediate;
+		String timeToString = app.getString(timeToId);
+		String stateTitle = app.getString(titleId);
+		return context.getString(R.string.ltr_or_rtl_combine_via_colon, timeToString, stateTitle);
+		*/
+		return app.getString(getInfo().titleId);
 	}
 
 	@Override
 	public int getSettingsIconId(boolean nightMode) {
-		return nightMode ? getDiffElevationType().nightIconId : getDiffElevationType().dayIconId;
+		Info info = getInfo();
+		return nightMode ? info.nightIconId : info.dayIconId;
 	}
 
 	@Override
 	public void changeToNextState() {
-		typePreference.set(getDiffElevationType().next());
+		displayPreference.set(getDiffElevationDisplay().next());
 	}
 
 	@Override
@@ -62,18 +68,17 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 
 	@Override
 	public void copyPrefsFromMode(@NonNull ApplicationMode sourceAppMode, @NonNull ApplicationMode appMode, @Nullable String customId){
-		//registerTimeTypePref(customId).setModeValue(appMode, arrivalTimeOrTimeToGo.getModeValue(sourceAppMode));
-		registerTypePreference(customId).setModeValue(appMode, typePreference.getModeValue(sourceAppMode));
+		registerTypePreference(customId).setModeValue(appMode, displayPreference.getModeValue(sourceAppMode));
 		registerTargetPref(customId, null).setModeValue(appMode, targetPreference.getModeValue(sourceAppMode));
 	}
 
 	@NonNull
-	private OsmandPreference<DiffElevationType> registerTypePreference(@Nullable String customId) {
+	private OsmandPreference<DiffElevationDisplay> registerTypePreference(@Nullable String customId) {
 		String prefId = "diff_elevation_type";
 		if (!Algorithms.isEmpty(customId)) {
 			prefId += customId;
 		}
-		return settings.registerEnumStringPreference(prefId, DiffElevationType.POSITIVE_DIFF, DiffElevationType.values(), DiffElevationType.class).makeProfile();
+		return settings.registerEnumStringPreference(prefId, DiffElevationDisplay.POSITIVE_DIFF, DiffElevationDisplay.values(), DiffElevationDisplay.class).makeProfile();
 	}
 
 	@NonNull
@@ -86,43 +91,39 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 		return settings.registerEnumStringPreference(prefId, init, DiffElevationTarget.values(), DiffElevationTarget.class).makeProfile();
 	}
 
+	public static class Info {
+		public final int titleId;
+		public final int dayIconId;
+		public final int nightIconId;
+
+		public Info(@StringRes int titleId,
+					@DrawableRes int dayIconId,
+					@DrawableRes int nightIconId) {
+			this.titleId = titleId;
+			this.dayIconId = dayIconId;
+			this.nightIconId = nightIconId;
+		}
+	}
+	private static final Map<DiffElevationDisplay, Map<DiffElevationTarget, Info>> infos = new HashMap<DiffElevationDisplay, Map<DiffElevationTarget, Info>>() {{
+		// TODO: could distinguish titles?
+		for (DiffElevationDisplay d: DiffElevationDisplay.values()) {
+			this.put(d, new HashMap<DiffElevationTarget, Info>() {{
+				this.put(DiffElevationTarget.DESTINATION, new Info(R.string.map_widget_diff_elevation, R.drawable.widget_destination_diff_elevation_day, R.drawable.widget_destination_diff_elevation_night));
+				this.put(DiffElevationTarget.NEXT_INTERMEDIATE, new Info(R.string.map_widget_diff_elevation, R.drawable.widget_intermediate_diff_elevation_day, R.drawable.widget_intermediate_diff_elevation_night));
+			}});
+		}
+	}};
+
+
 	public enum DiffElevationTarget {
 		DESTINATION, NEXT_INTERMEDIATE, NEXT_STRETCH;
 	}
 
-	public enum DiffElevationType {
-		POSITIVE_DIFF(R.string.map_widget_time, R.drawable.widget_destination_diff_elevation_day, R.drawable.widget_destination_diff_elevation_night),
-		NEGATIVE_DIFF(R.string.access_arrival_time, R.drawable.widget_destination_diff_elevation_day, R.drawable.widget_destination_diff_elevation_night),
-		BOTH_DIFF(R.string.map_widget_time, R.drawable.widget_destination_diff_elevation_day, R.drawable.widget_destination_diff_elevation_night);
-
-		@StringRes
-		public final int titleId;
-		@DrawableRes
-		public final int dayIconId;
-		@DrawableRes
-		public final int nightIconId;
-		//public final boolean intermediate;
-
-		DiffElevationType(@StringRes int titleId,
-						@DrawableRes int dayIconId,
-						@DrawableRes int nightIconId
-						/*boolean intermediate*/) {
-			this.titleId = titleId;
-			this.dayIconId = dayIconId;
-			this.nightIconId = nightIconId;
-			//this.intermediate = intermediate;
-		}
+	public enum DiffElevationDisplay {
+		POSITIVE_DIFF, NEGATIVE_DIFF, BOTH_DIFF;
 
 		@NonNull
-		public String getTitle(@NonNull Context context) {
-			int timeToId = R.string.map_widget_time_to_intermediate;
-			String timeToString = context.getString(timeToId);
-			String stateTitle = context.getString(titleId);
-			return context.getString(R.string.ltr_or_rtl_combine_via_colon, timeToString, stateTitle);
-		}
-
-		@NonNull
-		public DiffElevationType next() {
+		public DiffElevationDisplay next() {
 			int nextItemIndex = (ordinal() + 1) % values().length;
 			return values()[nextItemIndex];
 		}
