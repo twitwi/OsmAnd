@@ -8,7 +8,6 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import net.osmand.gpx.GPXFile;
 import net.osmand.plus.R;
 import net.osmand.plus.activities.MapActivity;
 import net.osmand.plus.routing.RouteCalculationResult;
@@ -20,9 +19,7 @@ import net.osmand.plus.views.layers.base.OsmandMapLayer.DrawSettings;
 import net.osmand.plus.views.mapwidgets.WidgetType;
 import net.osmand.plus.views.mapwidgets.WidgetsPanel;
 import net.osmand.plus.views.mapwidgets.widgetstates.DiffElevationToPointWidgetState;
-import net.osmand.plus.views.mapwidgets.widgetstates.TimeToNavigationPointWidgetState.TimeToNavigationPointState;
 import net.osmand.plus.views.mapwidgets.widgetstates.WidgetState;
-import net.osmand.util.Algorithms;
 
 import java.util.concurrent.TimeUnit;
 
@@ -113,14 +110,14 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 
 		if (routingHelper.isRouteCalculated()) {
 
-			routingHelper.updateListDiffElevation();
+			//routingHelper.updateListDiffElevation();
 
 			// maybe leftDiffEle......
 			leftSeconds = widgetState.isIntermediate() ? routingHelper.getLeftTimeNextIntermediate() : routingHelper.getLeftTime();
 			boolean updateIntervalPassed = Math.abs(leftSeconds - cachedLeftSeconds) > UPDATE_INTERVAL_SECONDS;
 			if (leftSeconds != 0 && (updateIntervalPassed || modeUpdated)) {
 				cachedLeftSeconds = leftSeconds;
-				updateDiffElevationToGo(routingHelper.getLeftDiffElevation());
+				updateDiffElevationToGo(routingHelper.getLeftDiffElevation(), cachedTypePreference);
 			}
 		}
 
@@ -140,10 +137,20 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 		setContentTitle(title);
 	}
 
-	private void updateDiffElevationToGo(RouteCalculationResult.DiffElevation diffElevation) {
+	private void updateDiffElevationToGo(RouteCalculationResult.DiffElevation diffElevation, DiffElevationToPointWidgetState.DiffElevationType cachedTypePreference) {
 		String formattedAltUp = OsmAndFormatter.getFormattedAlt(diffElevation.up, app);
 		String formattedAltDown = OsmAndFormatter.getFormattedAlt(diffElevation.down, app);
-		setText(formattedAltUp + "+", formattedAltDown + "-");
+		switch(cachedTypePreference) {
+			case BOTH_DIFF:
+				setText("+" + formattedAltUp, "-" + formattedAltDown);
+				break;
+			case POSITIVE_DIFF:
+				setText(formattedAltUp, "D+");
+				break;
+			case NEGATIVE_DIFF:
+				setText(formattedAltDown,"D-");
+				break;
+		}
 	}
 
 	private void updateArrivalTime(int leftSeconds) {
