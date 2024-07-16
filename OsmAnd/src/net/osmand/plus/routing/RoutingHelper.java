@@ -766,13 +766,6 @@ public class RoutingHelper {
 		return route.getDistanceToNextIntermediate(lastFixedLocation);
 	}
 
-	public void updateListDiffElevation() {
-		if (route.isCalculated()) {
-			GPXFile gpx = GpxUiHelper.makeGpxFromLocations(route.getImmutableAllLocations(), app); //generateGPXFileWithRoute(route, "dummy");
-			GPXTrackAnalysis analysis = gpx.getAnalysis(0);
-			route.updateListDiffElevation(gpx);
-		}
-	}
 	public RouteCalculationResult.DiffElevation getLeftDiffElevation() {
 		return route.getDiffElevationToFinish(lastFixedLocation);
 	}

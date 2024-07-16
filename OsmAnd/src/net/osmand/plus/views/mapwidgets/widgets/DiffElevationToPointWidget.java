@@ -29,10 +29,8 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 
 	private final RoutingHelper routingHelper;
 	private final DiffElevationToPointWidgetState widgetState;
-	//private final OsmandPreference<Boolean> arrivalTimeOtherwiseTimeToGoPref;
 	private final OsmandPreference<DiffElevationToPointWidgetState.DiffElevationType> typePreference;
 
-	//private boolean cachedArrivalTimeOtherwiseTimeToGo;
 	private DiffElevationToPointWidgetState.DiffElevationType cachedTypePreference;
 	private int cachedLeftSeconds;
 
@@ -109,9 +107,6 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 		*/
 
 		if (routingHelper.isRouteCalculated()) {
-
-			//routingHelper.updateListDiffElevation();
-
 			// maybe leftDiffEle......
 			leftSeconds = widgetState.isIntermediate() ? routingHelper.getLeftTimeNextIntermediate() : routingHelper.getLeftTime();
 			boolean updateIntervalPassed = Math.abs(leftSeconds - cachedLeftSeconds) > UPDATE_INTERVAL_SECONDS;
@@ -200,9 +195,5 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 	private DiffElevationToPointWidgetState.DiffElevationType getCurrentState() {
 		return widgetState.getDiffElevationType();
 	}
-	/*
-	@NonNull
-	private DiffElevationToPointWidgetState getCurrentState() {
-		return DiffElevationToPointWidgetState.getState(widgetState.isIntermediate(), arrivalTimeOtherwiseTimeToGoPref.get());
-	} */
+
 }
