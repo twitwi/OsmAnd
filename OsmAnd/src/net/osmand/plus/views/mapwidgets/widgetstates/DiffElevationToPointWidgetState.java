@@ -19,10 +19,10 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 	private final OsmandPreference<DiffElevationDisplay> displayPreference;
 	private final OsmandPreference<DiffElevationTarget> targetPreference;
 
-	public DiffElevationToPointWidgetState(@NonNull OsmandApplication app, @Nullable String customId, boolean intermediate) {
+	public DiffElevationToPointWidgetState(@NonNull OsmandApplication app, @Nullable String customId, DiffElevationTarget target) {
 		super(app);
 		this.displayPreference = registerTypePreference(customId);
-		this.targetPreference = registerTargetPref(customId, intermediate ? DiffElevationTarget.NEXT_INTERMEDIATE : DiffElevationTarget.DESTINATION);
+		this.targetPreference = registerTargetPref(customId, target);
 	}
 
 	@NonNull
@@ -110,6 +110,7 @@ public class DiffElevationToPointWidgetState extends WidgetState {
 			this.put(d, new HashMap<DiffElevationTarget, Info>() {{
 				this.put(DiffElevationTarget.DESTINATION, new Info(R.string.map_widget_diff_elevation, R.drawable.widget_destination_diff_elevation_day, R.drawable.widget_destination_diff_elevation_night));
 				this.put(DiffElevationTarget.NEXT_INTERMEDIATE, new Info(R.string.map_widget_diff_elevation, R.drawable.widget_intermediate_diff_elevation_day, R.drawable.widget_intermediate_diff_elevation_night));
+				this.put(DiffElevationTarget.NEXT_STRETCH, new Info(R.string.map_widget_diff_elevation, R.drawable.widget_next_stretch_diff_elevation_day, R.drawable.widget_next_stretch_diff_elevation_night));
 			}});
 		}
 	}};

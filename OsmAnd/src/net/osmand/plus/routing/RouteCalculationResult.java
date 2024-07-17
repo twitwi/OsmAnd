@@ -1006,7 +1006,9 @@ public class RouteCalculationResult {
 			refineBasedOnExtremum(listDiffElevation, listDistance, elevations, 0, listDistance.length - 1);
 			// cumulative values
 			for (int i = locations.size() - 1; i > 0; i--) {
-				listDiffElevation[i - 1] = listDiffElevation[i].newWithDelta(listDiffElevation[i - 1].up - listDiffElevation[i - 1].down);
+				boolean extremum = listDiffElevation[i-1].extremum;
+				DiffElevation raw = listDiffElevation[i - 1];
+				listDiffElevation[i - 1] = listDiffElevation[i].newWithDelta(raw.up - raw.down, raw.extremum);
 			}
 		}
 	}
@@ -1021,7 +1023,6 @@ public class RouteCalculationResult {
 
 		for(int i = start + 1; i < end; ++i) {
 			double md = Math.abs(elevations[i] - firstPointEle - (endPointEle-firstPointEle)*(listDistance[i]-firstPointDist)/(endPointDist-firstPointDist));
-			android.util.Log.e("ZZZ", start+" "+i+" "+end+" "+md+" vs "+maxDiff);
 			if (md > maxDiff) {
 				max = i;
 				maxDiff = md;
@@ -1064,6 +1065,7 @@ public class RouteCalculationResult {
 					}
 				}
 			}
+			listDiffElevation[start].extremum = listDiffElevation[end].extremum = true;
 		}
 	}
 
@@ -1485,6 +1487,61 @@ public class RouteCalculationResult {
 		return new DiffElevation();
 	}
 
+	public DiffElevation getDiffElevationNextStretch(Location fromLoc) {
+		DiffElevation toFinish = getDiffElevationToFinish(fromLoc);
+		Location ap = this.currentStraightAnglePoint;
+		int rp = Math.max(currentStraightAngleRoute, currentRoute);
+		if (listDiffElevation != null && rp < listDiffElevation.length) {
+			rp++;
+			while (rp < listDiffElevation.length) {
+				if (listDiffElevation[rp].extremum) break;
+				rp++;
+			}
+			rp++;
+			while (rp < listDiffElevation.length) {
+				if (listDiffElevation[rp].extremum) break;
+				rp++;
+			}
+			if (rp < listDiffElevation.length) {
+				return toFinish.minus(listDiffElevation[rp]);
+			}
+		}
+		return toFinish;
+	}
+	public List<Double> getDiffElevationNextStretches(Location fromLoc) {
+		double IGNORE_DIFF_ELEVEATION = 10;
+		DiffElevation toFinish = getDiffElevationToFinish(fromLoc);
+		Location ap = this.currentStraightAnglePoint;
+		int rp = Math.max(currentStraightAngleRoute, currentRoute);
+		if (listDiffElevation != null && rp < listDiffElevation.length) {
+			List<Double> res = new ArrayList<>();
+			rp++;
+			for (; rp < listDiffElevation.length; rp++) {
+				if (listDiffElevation[rp].extremum) {
+					res.add(toFinish.minus(listDiffElevation[rp]).signedTotal());
+					toFinish = listDiffElevation[rp];
+				}
+			}
+			//return res;
+			List<Double> merged = new ArrayList<>();
+			double accumulated = 0;
+			for (int i = 0; i < res.size(); i++) {
+				double delta = res.get(i);
+				if (Math.abs(delta) < IGNORE_DIFF_ELEVEATION)
+					delta = 0;
+				if (Math.abs(Math.signum(accumulated) - Math.signum(delta)) > 1.5) {
+					merged.add(accumulated);
+					accumulated = 0;
+				}
+				accumulated += res.get(i);
+			}
+			if (accumulated != 0) {
+				merged.add(accumulated);
+			}
+			return merged;
+		}
+		return Arrays.asList(0.);
+	}
 	public DiffElevation getDiffElevationToNextIntermediate(Location fromLoc) {
 		DiffElevation diffElevation = getDiffElevationToFinish(fromLoc);
 		if (listDiffElevation != null && currentRoute < listDiffElevation.length) {
@@ -1600,6 +1657,7 @@ public class RouteCalculationResult {
 	public static class DiffElevation {
 		public final double up;
 		public final double down;
+		public boolean extremum = false;
 
 		public DiffElevation() {
 			this.up = 0;
@@ -1608,6 +1666,11 @@ public class RouteCalculationResult {
 		public DiffElevation(double up, double down) {
 			this.up = up;
 			this.down = down;
+		}
+		public DiffElevation(double up, double down, boolean extremum) {
+			this.up = up;
+			this.down = down;
+			this.extremum = extremum;
 		}
 
 		public DiffElevation minus(DiffElevation o) {
@@ -1621,6 +1684,14 @@ public class RouteCalculationResult {
 				return new DiffElevation(this.up, this.down - diffEle);
 			}
 		}
+
+		public DiffElevation newWithDelta(double diffEle, boolean extremum) {
+			if (diffEle > 0) {
+				return new DiffElevation(this.up + diffEle, this.down, extremum);
+			} else {
+				return new DiffElevation(this.up, this.down - diffEle, extremum);
+			}
+		}
 		public DiffElevation newWithSubtractingDelta(double diffEle) {
 			if (diffEle > 0) {
 				return new DiffElevation(this.up - diffEle, this.down);
@@ -1632,10 +1703,14 @@ public class RouteCalculationResult {
 		public double total() {
 			return up + down;
 		}
+		public double signedTotal() {
+			return up - down;
+		}
 
 		@Override
 		public String toString() {
-			return "DiffElevation{" +
+			return (extremum ? "*" : "_") +
+					"DiffElevation{" +
 					"up=" + up +
 					", down=" + down +
 					'}';

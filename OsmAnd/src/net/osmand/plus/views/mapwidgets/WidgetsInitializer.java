@@ -8,6 +8,8 @@ import static net.osmand.plus.views.mapwidgets.WidgetType.COORDINATES_CURRENT_LO
 import static net.osmand.plus.views.mapwidgets.WidgetType.COORDINATES_MAP_CENTER;
 import static net.osmand.plus.views.mapwidgets.WidgetType.CURRENT_SPEED;
 import static net.osmand.plus.views.mapwidgets.WidgetType.CURRENT_TIME;
+import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_NEXT_STRETCH;
+import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_TO_INTERMEDIATE;
 import static net.osmand.plus.views.mapwidgets.WidgetType.DISTANCE_TO_DESTINATION;
 import static net.osmand.plus.views.mapwidgets.WidgetType.ELEVATION_PROFILE;
 import static net.osmand.plus.views.mapwidgets.WidgetType.GLIDE_AVERAGE;
@@ -117,6 +119,8 @@ public class WidgetsInitializer {
 		addWidgetInfo(RADIUS_RULER);
 		addWidgetInfo(TIME_TO_INTERMEDIATE);
 		addWidgetInfo(TIME_TO_DESTINATION);
+		addWidgetInfo(DIFF_ELEVATION_NEXT_STRETCH);
+		addWidgetInfo(DIFF_ELEVATION_TO_INTERMEDIATE);
 		addWidgetInfo(DIFF_ELEVATION_TO_DESTINATION);
 		addWidgetInfo(SIDE_MARKER_1);
 		addWidgetInfo(SIDE_MARKER_2);

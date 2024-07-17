@@ -772,6 +772,12 @@ public class RoutingHelper {
 	public RouteCalculationResult.DiffElevation getLeftDiffElevationNextIntermediate() {
 		return route.getDiffElevationToNextIntermediate(lastFixedLocation);
 	}
+	public RouteCalculationResult.DiffElevation getLeftDiffElevationNextStretch() {
+		return route.getDiffElevationNextStretch(lastFixedLocation);
+	}
+	public List<Double> getDiffElevationNextStretches() {
+		return route.getDiffElevationNextStretches(lastFixedLocation);
+	}
 
 	public int getLeftTime() {
 		return route.getLeftTime(lastFixedLocation);

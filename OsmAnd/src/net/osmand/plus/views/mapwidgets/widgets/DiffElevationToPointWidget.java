@@ -1,5 +1,6 @@
 package net.osmand.plus.views.mapwidgets.widgets;
 
+import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_NEXT_STRETCH;
 import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_TO_DESTINATION;
 import static net.osmand.plus.views.mapwidgets.WidgetType.DIFF_ELEVATION_TO_INTERMEDIATE;
 
@@ -20,7 +21,9 @@ import net.osmand.plus.views.mapwidgets.WidgetsPanel;
 import net.osmand.plus.views.mapwidgets.widgetstates.DiffElevationToPointWidgetState;
 import net.osmand.plus.views.mapwidgets.widgetstates.WidgetState;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class DiffElevationToPointWidget extends SimpleWidget {
 
@@ -50,9 +53,10 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 				return DIFF_ELEVATION_TO_DESTINATION;
 			case NEXT_INTERMEDIATE:
 				return DIFF_ELEVATION_TO_INTERMEDIATE;
-			default: // TODO
-				return null;
+			case NEXT_STRETCH:
+				return DIFF_ELEVATION_NEXT_STRETCH;
 		}
+		return null;
 	}
 
 	@Override
@@ -100,6 +104,11 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 					case NEXT_INTERMEDIATE:
 						updateDiffElevationToGo(routingHelper.getLeftDiffElevationNextIntermediate(), cachedDisplayPreference);
 						break;
+					case NEXT_STRETCH: {
+						//updateDiffElevationToGo(routingHelper.getLeftDiffElevationNextStretch(), cachedDisplayPreference);
+						updateDiffElevationStretches(routingHelper.getDiffElevationNextStretches(), cachedDisplayPreference);
+						break;
+					}
 				}
 			}
 		}
@@ -118,19 +127,50 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 		setContentTitle(widgetState.getTitle());
 	}
 
-	private void updateDiffElevationToGo(RouteCalculationResult.DiffElevation diffElevation, DiffElevationToPointWidgetState.DiffElevationDisplay cachedTypePreference) {
-		String formattedAltUp = OsmAndFormatter.getFormattedAlt(diffElevation.up, app);
-		String formattedAltDown = OsmAndFormatter.getFormattedAlt(diffElevation.down, app);
-		switch(cachedTypePreference) {
+	private String signedFormatAlt(double delta) {
+		return (delta > 0 ? "+" : "") + OsmAndFormatter.getFormattedAlt(delta, app).replaceAll(" ", "");
+	}
+
+	private void updateDiffElevationToGo(RouteCalculationResult.DiffElevation diffElevation, DiffElevationToPointWidgetState.DiffElevationDisplay diffElevationDisplay) {
+
+		switch(diffElevationDisplay) {
 			case BOTH_DIFF:
-				setText("+" + formattedAltUp, "-" + formattedAltDown);
+				setText(signedFormatAlt(diffElevation.up), signedFormatAlt(-diffElevation.down));
 				break;
 			case POSITIVE_DIFF:
-				setText(formattedAltUp, "D+");
+				setText(OsmAndFormatter.getFormattedAlt(diffElevation.up, app), "D+");
 				break;
 			case NEGATIVE_DIFF:
-				setText(formattedAltDown,"D-");
+				setText(OsmAndFormatter.getFormattedAlt(diffElevation.down, app),"D-");
 				break;
+		}
+	}
+
+	private void updateDiffElevationStretches(List<Double> deltas, DiffElevationToPointWidgetState.DiffElevationDisplay diffElevationDisplay) {
+		switch(diffElevationDisplay) {
+			case BOTH_DIFF:
+				setText(signedFormatAlt(deltas.get(0)), deltas.stream().skip(1).map(this::signedFormatAlt).collect(Collectors.joining("/")));
+				break;
+			case POSITIVE_DIFF: {
+				double accumulated = 0;
+				int i = 0;
+				while (i < deltas.size() && deltas.get(i) >= 0) {
+					accumulated += deltas.get(i);
+					i++;
+				}
+				setText(OsmAndFormatter.getFormattedAlt(accumulated, app), "D+");
+				break;
+			}
+			case NEGATIVE_DIFF: {
+				double accumulated = 0;
+				int i = 0;
+				while (i < deltas.size() && deltas.get(i) <= 0) {
+					accumulated += deltas.get(i);
+					i++;
+				}
+				setText(OsmAndFormatter.getFormattedAlt(-accumulated, app), "D-");
+				break;
+			}
 		}
 	}
 

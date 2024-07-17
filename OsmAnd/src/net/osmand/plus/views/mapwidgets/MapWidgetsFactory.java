@@ -89,11 +89,15 @@ public class MapWidgetsFactory {
 				return new TimeToNavigationPointWidget(mapActivity, state, customId, panel);
 			}
 			case DIFF_ELEVATION_TO_INTERMEDIATE: {
-				DiffElevationToPointWidgetState state = new DiffElevationToPointWidgetState(app, customId, true);
+				DiffElevationToPointWidgetState state = new DiffElevationToPointWidgetState(app, customId, DiffElevationToPointWidgetState.DiffElevationTarget.NEXT_INTERMEDIATE);
 				return new DiffElevationToPointWidget(mapActivity, state, customId, panel);
 			}
 			case DIFF_ELEVATION_TO_DESTINATION: {
-				DiffElevationToPointWidgetState state = new DiffElevationToPointWidgetState(app, customId, false);
+				DiffElevationToPointWidgetState state = new DiffElevationToPointWidgetState(app, customId, DiffElevationToPointWidgetState.DiffElevationTarget.DESTINATION);
+				return new DiffElevationToPointWidget(mapActivity, state, customId, panel);
+			}
+			case DIFF_ELEVATION_NEXT_STRETCH: {
+				DiffElevationToPointWidgetState state = new DiffElevationToPointWidgetState(app, customId, DiffElevationToPointWidgetState.DiffElevationTarget.NEXT_STRETCH);
 				return new DiffElevationToPointWidget(mapActivity, state, customId, panel);
 			}
 			case SIDE_MARKER_1:
