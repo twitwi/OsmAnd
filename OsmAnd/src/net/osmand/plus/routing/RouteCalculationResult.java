@@ -1006,7 +1006,6 @@ public class RouteCalculationResult {
 			refineBasedOnExtremum(listDiffElevation, listDistance, elevations, 0, listDistance.length - 1);
 			// cumulative values
 			for (int i = locations.size() - 1; i > 0; i--) {
-				boolean extremum = listDiffElevation[i-1].extremum;
 				DiffElevation raw = listDiffElevation[i - 1];
 				listDiffElevation[i - 1] = listDiffElevation[i].newWithDelta(raw.up - raw.down, raw.extremum);
 			}
@@ -1469,65 +1468,33 @@ public class RouteCalculationResult {
 	}
 
 	public DiffElevation getDiffElevationToFinish(Location fromLoc) {
-		Location ap = this.currentStraightAnglePoint;
+		// Due to missing or wrong altitude correction, the fromLoc altitude might be offset (e.g. +60m)
+		// so we ignore it or else the first stretch is always artificial and downhill
 		int rp = Math.max(currentStraightAngleRoute, currentRoute);
 		if (listDiffElevation != null && rp < listDiffElevation.length) {
-			DiffElevation diffElevation = listDiffElevation[rp];
-			Location l = locations.get(rp);
-			if (ap != null && ap.getAltitude() != 0) {
-				if (fromLoc != null && fromLoc.getAltitude() != 0) {
-					diffElevation = diffElevation.newWithDelta(ap.getAltitude() - fromLoc.getAltitude());
-				}
-				diffElevation = diffElevation.newWithDelta(l.getAltitude() - ap.getAltitude());
-			} else if (fromLoc != null && fromLoc.getAltitude() != 0) {
-				diffElevation = diffElevation.newWithDelta(l.getAltitude() - fromLoc.getAltitude());
-			}
-			return diffElevation;
+			return listDiffElevation[rp];
 		}
 		return new DiffElevation();
 	}
 
-	public DiffElevation getDiffElevationNextStretch(Location fromLoc) {
-		DiffElevation toFinish = getDiffElevationToFinish(fromLoc);
-		Location ap = this.currentStraightAnglePoint;
-		int rp = Math.max(currentStraightAngleRoute, currentRoute);
-		if (listDiffElevation != null && rp < listDiffElevation.length) {
-			rp++;
-			while (rp < listDiffElevation.length) {
-				if (listDiffElevation[rp].extremum) break;
-				rp++;
-			}
-			rp++;
-			while (rp < listDiffElevation.length) {
-				if (listDiffElevation[rp].extremum) break;
-				rp++;
-			}
-			if (rp < listDiffElevation.length) {
-				return toFinish.minus(listDiffElevation[rp]);
-			}
-		}
-		return toFinish;
-	}
 	public List<Double> getDiffElevationNextStretches(Location fromLoc) {
-		double IGNORE_DIFF_ELEVEATION = 10;
+		double IGNORE_DIFF_ELEVATION = 10;
 		DiffElevation toFinish = getDiffElevationToFinish(fromLoc);
 		Location ap = this.currentStraightAnglePoint;
 		int rp = Math.max(currentStraightAngleRoute, currentRoute);
 		if (listDiffElevation != null && rp < listDiffElevation.length) {
 			List<Double> res = new ArrayList<>();
-			rp++;
 			for (; rp < listDiffElevation.length; rp++) {
 				if (listDiffElevation[rp].extremum) {
 					res.add(toFinish.minus(listDiffElevation[rp]).signedTotal());
 					toFinish = listDiffElevation[rp];
 				}
 			}
-			//return res;
 			List<Double> merged = new ArrayList<>();
 			double accumulated = 0;
 			for (int i = 0; i < res.size(); i++) {
 				double delta = res.get(i);
-				if (Math.abs(delta) < IGNORE_DIFF_ELEVEATION)
+				if (Math.abs(delta) < IGNORE_DIFF_ELEVATION)
 					delta = 0;
 				if (Math.abs(Math.signum(accumulated) - Math.signum(delta)) > 1.5) {
 					merged.add(accumulated);

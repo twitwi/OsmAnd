@@ -105,7 +105,6 @@ public class DiffElevationToPointWidget extends SimpleWidget {
 						updateDiffElevationToGo(routingHelper.getLeftDiffElevationNextIntermediate(), cachedDisplayPreference);
 						break;
 					case NEXT_STRETCH: {
-						//updateDiffElevationToGo(routingHelper.getLeftDiffElevationNextStretch(), cachedDisplayPreference);
 						updateDiffElevationStretches(routingHelper.getDiffElevationNextStretches(), cachedDisplayPreference);
 						break;
 					}
