@@ -1470,9 +1470,19 @@ public class RouteCalculationResult {
 	public DiffElevation getDiffElevationToFinish(Location fromLoc) {
 		// Due to missing or wrong altitude correction, the fromLoc altitude might be offset (e.g. +60m)
 		// so we ignore it or else the first stretch is always artificial and downhill
+		// however, the effect is to skip the current segment (which might be bad for long straight path)
+		// so we  interpolate based on distance
 		int rp = Math.max(currentStraightAngleRoute, currentRoute);
 		if (listDiffElevation != null && rp < listDiffElevation.length) {
-			return listDiffElevation[rp];
+			DiffElevation res = listDiffElevation[rp];
+			if (rp > 0) {
+				double toNext = fromLoc.distanceTo(locations.get(rp));
+				double toPrev = fromLoc.distanceTo(locations.get(rp-1));
+				double propFromPrev = toPrev / (toPrev + toNext);
+				double d = listDiffElevation[rp - 1].signedTotal() - res.signedTotal(); // as it is decreasing
+				res = res.newWithDelta(propFromPrev * d);
+			}
+			return res;
 		}
 		return new DiffElevation();
 	}
